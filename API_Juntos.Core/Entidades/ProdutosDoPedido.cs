@@ -4,10 +4,10 @@ namespace API_Juntos.Core.Entidades
 {
     public class ProdutosDoPedido
     {
-        public ProdutosDoPedido(int idProduto, int quantidade)
+        public ProdutosDoPedido(int quantidade, int idProduto)
         {
-            IdProduto = idProduto;
             Quantidade = quantidade;
+            IdProduto = idProduto;
         }
         public int IdProdutosDoPedido { get; set; } 
         public int Quantidade { get; set; } 

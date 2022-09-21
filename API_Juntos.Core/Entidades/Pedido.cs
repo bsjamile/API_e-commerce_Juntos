@@ -6,14 +6,14 @@ namespace API_Juntos.Core.Entidades
 {
     public class Pedido
     {
-        public Pedido(DateTime dataPedido, int idCliente, List<ProdutosDoPedido> produtosDoPedido)
-        {
-            DataPedido = dataPedido;            
-            IdCliente = idCliente;
-            ProdutosDoPedido = produtosDoPedido;
-        }
-
         protected Pedido() { }
+        public Pedido(DateTime dataPedido, List<ProdutosDoPedido> produtosDoPedido, int idCliente, decimal valorPedido)
+        {
+            DataPedido = dataPedido;
+            ProdutosDoPedido = produtosDoPedido;
+            IdCliente = idCliente;
+            ValorPedido = valorPedido;
+        }
 
         public int IdPedido { get; set; }
         public decimal ValorPedido { get; set; }

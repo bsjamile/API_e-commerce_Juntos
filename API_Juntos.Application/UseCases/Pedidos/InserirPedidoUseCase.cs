@@ -154,22 +154,60 @@ namespace API_Juntos.Application.UseCases.Pedidos
 {
     public class InserirPedidoUseCase : IUseCaseAsync<InserirPedidoRequest, InserirPedidoResponse>
     {
-        public readonly IPedidoRepository _pedidoRepository;
+        private readonly IPedidoRepository _repository;
+        private readonly IProdutoRepository _produtoRepository;
+        private readonly IMapper _mapper;
+
+        public InserirPedidoUseCase(IPedidoRepository repository, IProdutoRepository produtoRepository, IMapper mapper)
+        {
+            _repository = repository;
+            _produtoRepository = produtoRepository;
+            _mapper = mapper;
+        }
+
         public async Task<InserirPedidoResponse> ExecuteAsync(InserirPedidoRequest request)
         {
-            if (request == null)
-                return null;
+            var validator = new InserirPedidoRequestValidator();
+            var validatorResults = validator.Validate(request);
 
-            var pedidoProdutos = new List<ProdutosDoPedido>();
+            if (!validatorResults.IsValid)
+            {
+                var validatorErros = string.Empty;
+                foreach (var error in validatorResults.Errors)
+                    validatorErros += error.ErrorMessage + " | ";
+
+                throw new Exception(validatorErros);
+            }
+
+            if (request == null)
+            { return null; }
+
+            var produtosDosPedidos = new List<ProdutosDoPedido>();
 
             foreach (var produtos in request.Produtos)
-                pedidoProdutos.Add(new ProdutosDoPedido(produtos.IdProduto, produtos.Quantidade));
+                produtosDosPedidos.Add(new ProdutosDoPedido(produtos.Quantidade, produtos.IdProduto));
 
-            var pedido = new Pedido(DateTime.Now, request.IdCliente, pedidoProdutos);
+            decimal valorPedido = 0;
 
-            await _pedidoRepository.Inserir(pedido);
+            foreach (var item in produtosDosPedidos)
+            {
+                var produtoSolicitado = await _produtoRepository.ListarPorId(item.IdProduto); //pega o id do request e passa para buscar produto por id
+                var valorTotalProduto = produtoSolicitado.Valor * item.Quantidade; //acessa o valor do produto encontrado e multiplica pela qnt vinda do request 
+                valorPedido += valorTotalProduto; //acrescenta o valor obtido ao total do pedido
+            }
 
-            return new InserirPedidoResponse();
+            var pedido = new Pedido(DateTime.Now, produtosDosPedidos, request.IdCliente, valorPedido);
+
+            await _repository.Inserir(pedido);
+
+
+
+
+            var pedidoResponse = new InserirPedidoResponse();
+            pedidoResponse.Mensagem = "Pedido inserido com sucesso!";
+            return pedidoResponse;
+
         }
+
     }
 }
